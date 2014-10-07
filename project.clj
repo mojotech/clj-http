@@ -1,6 +1,6 @@
-(defproject clj-http "2.0.0-SNAPSHOT"
+(defproject wkf/clj-http "2.0.0-SNAPSHOT"
   :description "A Clojure HTTP library wrapping the Apache HttpComponents client."
-  :url "https://github.com/dakrone/clj-http/"
+  :url "https://github.com/mojotech/clj-http/"
   :license {:name "The MIT License"
             :url "http://opensource.org/licenses/mit-license.php"
             :distribution :repo}

@@ -12,6 +12,7 @@
                             HttpResponse Header HttpHost
                             HttpResponseInterceptor)
            (org.apache.http.auth UsernamePasswordCredentials AuthScope
+                                 Credentials
                                  NTCredentials)
            (org.apache.http.params CoreConnectionPNames)
            (org.apache.http.client HttpClient HttpRequestRetryHandler)
@@ -20,7 +21,7 @@
                                            HttpGet HttpHead HttpOptions
                                            HttpPatch HttpPost HttpPut
                                            HttpUriRequest)
-           (org.apache.http.client.params CookiePolicy ClientPNames)
+           (org.apache.http.client.params CookiePolicy ClientPNames AuthPolicy)
            (org.apache.http.conn ClientConnectionManager)
            (org.apache.http.conn.routing HttpRoute)
            (org.apache.http.conn.params ConnRoutePNames)
@@ -28,6 +29,7 @@
            (org.apache.http.cookie.params CookieSpecPNames)
            (org.apache.http.entity ByteArrayEntity StringEntity)
 
+           (org.apache.http.impl.auth SPNegoSchemeFactory)
            (org.apache.http.impl.client DefaultHttpClient)
            (org.apache.http.impl.conn ProxySelectorRoutePlanner)
            (org.apache.http.impl.cookie BrowserCompatSpec)
@@ -215,7 +217,7 @@
            headers body multipart socket-timeout conn-timeout proxy-host
            proxy-ignore-hosts proxy-port proxy-user proxy-pass as cookie-store
            retry-handler response-interceptor digest-auth ntlm-auth
-           connection-manager client-params]
+           connection-manager client-params spnego-auth]
     :as req}]
   (let [^ClientConnectionManager conn-mgr
         (or connection-manager
@@ -239,7 +241,17 @@
      (merge {CoreConnectionPNames/SO_TIMEOUT socket-timeout
              CoreConnectionPNames/CONNECTION_TIMEOUT conn-timeout}
             client-params))
-
+    (when spnego-auth
+      (.register
+        (.getAuthSchemes http-client)
+        AuthPolicy/SPNEGO
+        (SPNegoSchemeFactory. true))
+      (.setCredentials
+        (.getCredentialsProvider http-client)
+        (AuthScope. nil -1 nil)
+        (reify Credentials
+          (getPassword [_] nil)
+          (getUserPrincipal [_] nil))))
     (when-let [[user pass] digest-auth]
       (.setCredentials
        (.getCredentialsProvider http-client)
